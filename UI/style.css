@@ -1,0 +1,47 @@
+.container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.group-label {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 24px;
+    color: #333;
+}
+
+.group {
+    margin-bottom: 20px;
+}
+
+.tanks-row {
+    display: flex;
+    justify-content: center;
+}
+
+.tank {
+    width: 100px; /* Adjust based on actual tank size */
+    height: 200px; /* Adjust based on actual tank size */
+    border-radius: 10px;
+    border: 2px solid #8c8c8c;
+    background-color: #f2f2f2;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin: 0 10px; /* Space between tanks */
+}
+
+.water {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 0; /* Initial water level; this will be set by JavaScript */
+    background-color: #4facfe;
+    transition: height 2s ease-in-out; /* Smooth transition for water level change */
+    box-shadow: inset 0 -2px 2px rgba(0,0,0,0.1);
+}
