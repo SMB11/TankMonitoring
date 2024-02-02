@@ -88,26 +88,35 @@ void setup() {
   pinMode(alarmRelayPin, OUTPUT);
   digitalWrite(alarmRelayPin, HIGH);
 
-  for (int i = 0; i < 3; i++) {
-    total[i] = 0; // Reset the total for each sensor
-    for (int j = 0; j < readingsToIgnore; j++) {
-      int reading = sonar[i].ping_cm();
-      // Skip invalid readings
-      if (reading > 0) {
-        sensorReadings[i][j] = reading;
-        total[i] += reading;
-      }
-    }
-    // Use the average of the first few valid readings as the initial lastDistance
-    if (readingsToIgnore > 0) {
-      lastDistances[i] = total[i] / readingsToIgnore;
-    } else {
-      lastDistances[i] = 0; // Fallback if readingsToIgnore is 0
-    }
-    readIndex[i] = readingsToIgnore % numReadings; // Adjust readIndex after initialization
-    average[i] = lastDistances[i]; // Initialize average with the same value
-  }
+// Extended warm-up time
+  delay(5000); // Consider extending if needed
 
+  for (int i = 0; i < 3; i++) {
+    bool validReadingObtained = false;
+    int validReadingsCount = 0;
+    const int requiredValidReadings = 10; // Number of consecutive valid readings to consider sensor stabilized
+    while (!validReadingObtained) {
+      int reading = sonar[i].ping_cm();
+      // Check if reading is within a reasonable range
+      if (reading > 0 && reading < MAX_DISTANCE) {
+        sensorReadings[i][validReadingsCount] = reading;
+        validReadingsCount++;
+        if (validReadingsCount >= requiredValidReadings) {
+          validReadingObtained = true;
+          // Calculate initial average from valid readings
+          int sum = 0;
+          for (int j = 0; j < requiredValidReadings; j++) {
+            sum += sensorReadings[i][j];
+          }
+          lastDistances[i] = sum / requiredValidReadings;
+        }
+      } else {
+        // Reset if an invalid reading is encountered
+        validReadingsCount = 0;
+      }
+      delay(100); // Short delay between readings to not overwhelm the sensor
+    }
+  }
 
   // startupTime = millis();
 }
