@@ -47,7 +47,7 @@ bool acknowledgedFlags[] = { false, false, false };
 
 int lastActiveTank = -1;  // To track the last tank that triggered the alarm
 
-const int numReadings = 40;          // Number of readings to average
+const int numReadings = 30;          // Number of readings to average
 int sensorReadings[3][numReadings];  // 2D array to store readings for each sensor
 int readIndex[3] = { 0, 0, 0 };      // Index for current reading for each sensor
 int total[3] = { 0, 0, 0 };          // Total of readings for each sensor
@@ -64,7 +64,7 @@ int previousState[]={ IDLE, IDLE, IDLE };
 int sensorReadingsCount[3] = {0, 0, 0};
 const int readingsToIgnore = 50;  // Number of readings to ignore for stabilization
 
-const unsigned long stateChangeDelay = 300000; // 5 minutes in milliseconds
+const unsigned long stateChangeDelay = 60000; // 5 minutes in milliseconds
 
 // Define maximum distance for sensors (in centimeters)
 #define MAX_DISTANCE 400
@@ -227,52 +227,102 @@ bool anyAlarmActive() {
   }
   return false;
 }
+// bool checkConsistentFilling(int tankIndex) {
+//   unsigned long currentTime = millis();
+//   if (currentTime - lastFillingCheckTimes[tankIndex] >= consistencyInterval) {
+//     int currentDistance = distances[tankIndex];
+//     int previousDistance = lastDistances[tankIndex];
+
+//     if (currentDistance <= previousDistance - distanceThreshold) {
+//       fillingCounter[tankIndex]++;
+//       if (fillingCounter[tankIndex] >= requiredConsistentReadings) {
+//           fillingCounter[tankIndex] = 0;
+//           lastFillingCheckTimes[tankIndex] = currentTime;
+//           return true;
+//       }
+//     } else {
+//       fillingCounter[tankIndex] = 0;
+//       lastIdleCheckTimes[tankIndex] = currentTime;
+//     }
+//   }
+//   return false;
+// }
+
 bool checkConsistentFilling(int tankIndex) {
   unsigned long currentTime = millis();
-  if (currentTime - lastFillingCheckTimes[tankIndex] >= consistencyInterval) {
-    int currentDistance = distances[tankIndex];
-    int previousDistance = lastDistances[tankIndex];
+  static unsigned long potentialStateChangeTime[3] = {0, 0, 0}; // add this line
 
-    if (currentDistance <= previousDistance - distanceThreshold) {
-      fillingCounter[tankIndex]++;
-      if (fillingCounter[tankIndex] >= requiredConsistentReadings) {
-          fillingCounter[tankIndex] = 0;
-          lastFillingCheckTimes[tankIndex] = currentTime;
-          return true;
+  int currentDistance = distances[tankIndex];
+  int previousDistance = lastDistances[tankIndex];
+
+  if (currentDistance <= previousDistance - distanceThreshold) {
+    fillingCounter[tankIndex]++;
+    if (fillingCounter[tankIndex] >= requiredConsistentReadings) {
+      if (potentialStateChangeTime[tankIndex] == 0) { // First detection of potential change
+        potentialStateChangeTime[tankIndex] = currentTime;
       }
-    } else {
-      fillingCounter[tankIndex] = 0;
-      lastIdleCheckTimes[tankIndex] = currentTime;
+      if (currentTime - potentialStateChangeTime[tankIndex] >= stateChangeDelay) { // Check if delay has passed
+        fillingCounter[tankIndex] = 0;
+        lastFillingCheckTimes[tankIndex] = currentTime;
+        potentialStateChangeTime[tankIndex] = 0; // Reset the timer
+        return true;
+      }
     }
+  } else {
+    fillingCounter[tankIndex] = 0;
+    potentialStateChangeTime[tankIndex] = 0; // Reset the timer if condition is not met
   }
   return false;
 }
 
 
 
-
+// bool checkConsistentDraining(int tankIndex) {
+//   unsigned long currentTime = millis();
+//   if (currentTime - lastDrainingCheckTimes[tankIndex] >= consistencyInterval) {
+//     int currentDistance = distances[tankIndex];
+//     int previousDistance = lastDistances[tankIndex];
+//     if (currentDistance >= previousDistance + distanceThreshold) {
+//       drainingCounter[tankIndex]++;
+//       if (drainingCounter[tankIndex] >= requiredConsistentReadings) {
+//           drainingCounter[tankIndex] = 0;
+//           lastDrainingCheckTimes[tankIndex] = currentTime;
+//           return true;
+//       }
+//     } else {
+//       drainingCounter[tankIndex] = 0;
+//       lastIdleCheckTimes[tankIndex] = currentTime;
+//     }
+//   }
+//   return false;
+// }
 
 bool checkConsistentDraining(int tankIndex) {
   unsigned long currentTime = millis();
-  if (currentTime - lastDrainingCheckTimes[tankIndex] >= consistencyInterval) {
-    int currentDistance = distances[tankIndex];
-    int previousDistance = lastDistances[tankIndex];
-    if (currentDistance >= previousDistance + distanceThreshold) {
-      drainingCounter[tankIndex]++;
-      if (drainingCounter[tankIndex] >= requiredConsistentReadings) {
-          drainingCounter[tankIndex] = 0;
-          lastDrainingCheckTimes[tankIndex] = currentTime;
-          return true;
+  static unsigned long potentialStateChangeTime[3] = {0, 0, 0}; // Track time when draining is first detected
+
+  int currentDistance = distances[tankIndex];
+  int previousDistance = lastDistances[tankIndex];
+
+  if (currentDistance >= previousDistance + distanceThreshold) {
+    drainingCounter[tankIndex]++;
+    if (drainingCounter[tankIndex] >= requiredConsistentReadings) {
+      if (potentialStateChangeTime[tankIndex] == 0) { // First detection of potential change
+        potentialStateChangeTime[tankIndex] = currentTime;
       }
-    } else {
-      drainingCounter[tankIndex] = 0;
-      lastIdleCheckTimes[tankIndex] = currentTime;
+      if (currentTime - potentialStateChangeTime[tankIndex] >= stateChangeDelay) { // Check if delay has passed
+        drainingCounter[tankIndex] = 0;
+        lastDrainingCheckTimes[tankIndex] = currentTime;
+        potentialStateChangeTime[tankIndex] = 0; // Reset the timer
+        return true;
+      }
     }
+  } else {
+    drainingCounter[tankIndex] = 0;
+    potentialStateChangeTime[tankIndex] = 0; // Reset the timer if condition is not met
   }
   return false;
 }
-
-
 
 
 bool checkConsistentIdle(int tankIndex) {

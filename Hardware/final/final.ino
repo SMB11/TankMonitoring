@@ -31,7 +31,7 @@ int tankMinimums[] = {210, 190, 169};
 
 // Variables for consistency checks
 unsigned long lastFillingCheckTimes[3] = {0, 0, 0};
-unsigned long lastDrainingCheckTimes[3] = {0, 0, 0};
+unsigned long lastDrainingCheckTime s[3] = {0, 0, 0};
 unsigned long lastIdleCheckTimes[3] = {0, 0, 0};
 const unsigned long consistencyInterval = 5000; // Time interval for consistency checks
 const int distanceThreshold = 3; // Threshold for significant distance change
