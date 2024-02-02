@@ -82,6 +82,7 @@ NewPing sonar[3] = {
 
 
 void setup() {
+
   Serial.begin(9600);  // Start serial communication
   pinMode(buttonPin, INPUT);
   pinMode(alarmRelayPin, OUTPUT);
@@ -89,10 +90,22 @@ void setup() {
 
   for (int i = 0; i < 3; i++) {
     total[i] = 0; // Reset the total for each sensor
-    for (int j = 0; j < numReadings; j++) {
-      sensorReadings[i][j] = 0; // Initialize with 0 or a sensible default value
-      total[i] += sensorReadings[i][j];
+    for (int j = 0; j < readingsToIgnore; j++) {
+      int reading = sonar[i].ping_cm();
+      // Skip invalid readings
+      if (reading > 0) {
+        sensorReadings[i][j] = reading;
+        total[i] += reading;
+      }
     }
+    // Use the average of the first few valid readings as the initial lastDistance
+    if (readingsToIgnore > 0) {
+      lastDistances[i] = total[i] / readingsToIgnore;
+    } else {
+      lastDistances[i] = 0; // Fallback if readingsToIgnore is 0
+    }
+    readIndex[i] = readingsToIgnore % numReadings; // Adjust readIndex after initialization
+    average[i] = lastDistances[i]; // Initialize average with the same value
   }
 
 
