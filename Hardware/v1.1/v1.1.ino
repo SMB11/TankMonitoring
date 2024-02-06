@@ -24,8 +24,8 @@ const int debounceDelay = 50;   // Delay for button debouncing
 
 // int tankHeights[] = {210, 300, 150};
 
-int tankMaximums[] = { 53, 53, 21 };
-int tankMinimums[] = { 210, 190, 169 };
+int tankMaximums[] = { 53, 53, 20 };
+int tankMinimums[] = { 210, 185, 169 };
 
 // Variables for consistency checks
 unsigned long lastFillingCheckTimes[3] = { 0, 0, 0 };
@@ -126,15 +126,19 @@ void loop() {
    
 
   for (int i = 0; i < 3; i++) {
-    if (sensorReadingsCount[i] < readingsToIgnore) {
-            // Ignore the reading and increment the count
-            sensorReadingsCount[i]++;
-            continue;  // Skip the rest of the loop for this sensor
-        }
+    // if (sensorReadingsCount[i] < readingsToIgnore) {
+    //         // Ignore the reading and increment the count
+    //         sensorReadingsCount[i]++;
+    //         continue;  // Skip the rest of the loop for this sensor
+    //     }
    // Subtract the last reading
     total[i] -= sensorReadings[i][readIndex[i]];
     // Read from the sensor
     int newReading = sonar[i].ping_cm();
+    if (newReading <= 0 || newReading > MAX_DISTANCE) {
+  // Consider logging this event or simply continuing to the next loop iteration
+  continue; // Skip this reading
+}
 
     // if (isOutlier(newReading, average[i])) {
     //     // If the reading is an outlier, ignore it
@@ -142,15 +146,16 @@ void loop() {
     // }
 
     newReading = newReading > 0 ? newReading : 0; // Ensure non-negative readings
-    sensorReadings[i][readIndex[i]] = newReading;
-    // Add the reading to the total
-    total[i] += sensorReadings[i][readIndex[i]];
-    // Advance to the next position in the array
-    readIndex[i] = (readIndex[i] + 1) % numReadings;
-    // Calculate the average
-    average[i] = total[i] / numReadings;
-    // Use 'average[i]' instead of 'distances[i]' for further logic
-    distances[i] = average[i];
+    // sensorReadings[i][readIndex[i]] = newReading;
+    // // Add the reading to the total
+    // total[i] += sensorReadings[i][readIndex[i]];
+    // // Advance to the next position in the array
+    // readIndex[i] = (readIndex[i] + 1) % numReadings;
+    // // Calculate the average
+    // average[i] = total[i] / numReadings;
+    // // Use 'average[i]' instead of 'distances[i]' for further logic
+    // distances[i] = average[i];
+    distances[i]=newReading;
 
     unsigned long currentTime = millis();
     if (currentTime - lastUpdateTime >= 360000) {
