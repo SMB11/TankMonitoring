@@ -337,9 +337,16 @@ void deactivateAlarm() {
 }
 
 
+// Comparison function for qsort
+int compare(const void * a, const void * b) {
+  return (*(int*)a - *(int*)b);
+}
+
+// Updated calculateMedian function using qsort
 int calculateMedian(int arr[], int n) {
-    sort(arr, arr + n); // Sort the array
+    qsort(arr, n, sizeof(int), compare); // Use qsort to sort the array
     if (n % 2 != 0) // If odd number of elements
         return arr[n / 2];
-    return (arr[(n - 1) / 2] + arr[n / 2]) / 2; // If even number of elements
+    return (arr[(n - 1) / 2] + arr[n / 2]) / 2; // If even number of elements, calculate average of middle two
 }
+
