@@ -47,7 +47,7 @@ bool acknowledgedFlags[] = { false, false, false };
 
 int lastActiveTank = -1;  // To track the last tank that triggered the alarm
 
-const int numReadings = 40;          // Number of readings to average
+const int numReadings = 10;          // Number of readings to average
 int sensorReadings[3][numReadings];  // 2D array to store readings for each sensor
 int readIndex[3] = { 0, 0, 0 };      // Index for current reading for each sensor
 int total[3] = { 0, 0, 0 };          // Total of readings for each sensor
@@ -126,36 +126,28 @@ void loop() {
    
 
   for (int i = 0; i < 3; i++) {
-    // if (sensorReadingsCount[i] < readingsToIgnore) {
-    //         // Ignore the reading and increment the count
-    //         sensorReadingsCount[i]++;
-    //         continue;  // Skip the rest of the loop for this sensor
-    //     }
+
    // Subtract the last reading
-    total[i] -= sensorReadings[i][readIndex[i]];
+    // total[i] -= sensorReadings[i][readIndex[i]];
+
     // Read from the sensor
     int newReading = sonar[i].ping_cm();
-    if (newReading <= 0 || newReading > MAX_DISTANCE) {
-  // Consider logging this event or simply continuing to the next loop iteration
-  continue; // Skip this reading
-}
+    if (newReading <= 0 || newReading > MAX_DISTANCE) continue; // Validate reading
 
-    // if (isOutlier(newReading, average[i])) {
-    //     // If the reading is an outlier, ignore it
-    //     continue;
-    // }
+    // Store the reading in a circular buffer
+    sensorReadings[i][readIndex[i]] = newReading;
+    readIndex[i] = (readIndex[i] + 1) % numReadings; // numReadings might be smaller for median calculation, like 5 or 10
 
-    newReading = newReading > 0 ? newReading : 0; // Ensure non-negative readings
-    // sensorReadings[i][readIndex[i]] = newReading;
-    // // Add the reading to the total
-    // total[i] += sensorReadings[i][readIndex[i]];
-    // // Advance to the next position in the array
-    // readIndex[i] = (readIndex[i] + 1) % numReadings;
-    // // Calculate the average
-    // average[i] = total[i] / numReadings;
-    // // Use 'average[i]' instead of 'distances[i]' for further logic
-    // distances[i] = average[i];
-    distances[i]=newReading;
+    // Calculate median from sensorReadings[i] and use it as the current distance
+    int sortedReadings[numReadings]; // Temporary array to store values for sorting
+    memcpy(sortedReadings, sensorReadings[i], sizeof(sortedReadings));
+    int medianDistance = calculateMedian(sortedReadings, numReadings);
+
+    // Use 'medianDistance' instead of 'newReading' for your logic below
+
+
+    // newReading = newReading > 0 ? newReading : 0; // Ensure non-negative readings
+    distances[i]=medianDistance;
 
     unsigned long currentTime = millis();
     if (currentTime - lastUpdateTime >= 360000) {
@@ -342,4 +334,12 @@ void deactivateAlarm() {
   digitalWrite(alarmRelayPin, HIGH);
   acknowledgedFlags[lastActiveTank] = true;
   Serial.println("Alarm OFF");
+}
+
+
+int calculateMedian(int arr[], int n) {
+    sort(arr, arr + n); // Sort the array
+    if (n % 2 != 0) // If odd number of elements
+        return arr[n / 2];
+    return (arr[(n - 1) / 2] + arr[n / 2]) / 2; // If even number of elements
 }
