@@ -25,7 +25,7 @@ const int debounceDelay = 50;   // Delay for button debouncing
 // int tankHeights[] = {210, 300, 150};
 
 int tankMaximums[] = { 53, 53, 20 };
-int tankMinimums[] = { 210, 185, 169 };
+int tankMinimums[] = { 210, 185, 170 };
 
 // Variables for consistency checks
 unsigned long lastFillingCheckTimes[3] = { 0, 0, 0 };
@@ -362,7 +362,7 @@ int calculateMedian(int arr[], int n) {
 
 bool areMedianReadingsConsistent(int sensorIndex) {
     for (int i = 0; i < numMedianReadings - 1; i++) {
-        if (abs(medianReadings[sensorIndex][i] - medianReadings[sensorIndex][i + 1]) > 5) {
+        if (abs(medianReadings[sensorIndex][i] - medianReadings[sensorIndex][i + 1]) > 10) {
             return false; // Readings differ by more than 5, not consistent
         }
     }
