@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Tank Monitor</title>
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <style>
+        .tank-container {
+            margin-top: 20px;
+            border: 2px solid #007bff;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #e3f2fd;
+        }
+        .tank {
+            height: 300px; /* Adjust based on actual requirements */
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        .water-level {
+            background: linear-gradient(to top, #007bff, #89d4f2);
+            width: 100%;
+            transition: height 0.5s ease-in-out; /* Smooth transition for the animation */
+        }
+        .label {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .liters {
+            position: absolute;
+            bottom: 5px;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <!-- Tank A -->
+        <div class="col-md-4">
+            <div class="tank-container">
+                <div class="tank" id="tankA">
+                    <div class="water-level" id="waterLevelA" style="height: 0%;"></div>
+                    <div class="liters" id="litersA">0 Liters</div>
+                </div>
+                <p class="label">Tank A</p>
+            </div>
+        </div>
+        <!-- Tank B -->
+        <div class="col-md-4">
+            <div class="tank-container">
+                <div class="tank" id="tankB">
+                    <div class="water-level" id="waterLevelB" style="height: 0%;"></div>
+                    <div class="liters" id="litersB">0 Liters</div>
+                </div>
+                <p class="label">Tank B</p>
+            </div>
+        </div>
+        <!-- Tank C -->
+        <div class="col-md-4">
+            <div class="tank-container">
+                <div class="tank" id="tankC">
+                    <div class="water-level" id="waterLevelC" style="height: 0%;"></div>
+                    <div class="liters" id="litersC">0 Liters</div>
+                </div>
+                <p class="label">Tank C</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Dynamic animation and display logic
+    function animateWaterLevels() {
+        // Example data: Replace with your actual data source
+        const tankData = [
+            { id: 'A', level: 100, volume: 700 }, // Tank A: 70% full, 700 Liters
+            { id: 'B', level: 50, volume: 500 }, // Tank B: 50% full, 500 Liters
+            { id: 'C', level: 35, volume: 850 }  // Tank C: 85% full, 850 Liters
+        ];
+
+        tankData.forEach(tank => {
+            const levelElement = document.getElementById(`waterLevel${tank.id}`);
+            const litersElement = document.getElementById(`liters${tank.id}`);
+            levelElement.style.height = `${tank.level}%`;
+            litersElement.textContent = `${tank.volume} Liters`;
+        });
+    }
+
+    window.onload = animateWaterLevels;
+</script>
+</body>
+</html>

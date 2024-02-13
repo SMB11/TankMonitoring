@@ -25,7 +25,7 @@ const int debounceDelay = 50;   // Delay for button debouncing
 // int tankHeights[] = {210, 300, 150};
 
 int tankMaximums[] = { 53, 53, 20 };
-int tankMinimums[] = { 210, 185, 170 };
+int tankMinimums[] = { 210, 195, 170 };
 
 // Variables for consistency checks
 unsigned long lastFillingCheckTimes[3] = { 0, 0, 0 };
@@ -66,6 +66,13 @@ const int readingsToIgnore = 50;  // Number of readings to ignore for stabilizat
 
 const unsigned long stateChangeDelay = 300000; // 5 minutes in milliseconds
 
+
+
+unsigned long lastAlarmAcknowledgmentTime = 0; // Tracks the last time an alarm was acknowledged
+const unsigned long alarmTriggerDelay = 300000; // 60,000 milliseconds = 1 minute delay before allowing a new alarm
+
+
+
 // Define maximum distance for sensors (in centimeters)
 #define MAX_DISTANCE 400
 
@@ -77,7 +84,7 @@ NewPing sonar[3] = {
 };
 
 
-const int numMedianReadings = 5; // Number of median readings to check for consistency
+const int numMedianReadings = 7; // Number of median readings to check for consistency
 int medianReadings[3][numMedianReadings]; // 2D array to store median readings for each sensor
 int medianReadIndex[3] = {0, 0, 0}; // Current index for storing median readings
 
@@ -155,7 +162,12 @@ medianReadIndex[i] = (medianReadIndex[i] + 1) % numMedianReadings;
 // After storing the new medianDistance, check for consistency
 bool isConsistent = areMedianReadingsConsistent(i);
 if (isConsistent) {
-    distances[i] = medianDistance; // Update distances[i] only if the last N readings are consistent
+  // Check if it's Tank 3 and the distance is greater than 175
+    if (i == 2 && medianDistance > 180) {
+        distances[i] = 180; // Set distance to 180 if greater than 175
+    } else {
+        distances[i] = medianDistance; // Update distances[i] with the median distance
+    }
 }
 
     unsigned long currentTime = millis();
@@ -175,15 +187,19 @@ if (isConsistent) {
       }
     } else if (tankStates[i] == FILLING) {
       if (distances[i] <= tankMaximums[i]) {
+        if (currentTime > lastAlarmAcknowledgmentTime + alarmTriggerDelay) {
         alarmActiveFlags[i] = true;
         lastActiveTank = i;
+        }
       } else if (checkConsistentIdle(i)) {
         tankStates[i] = IDLE;
       }
     } else if (tankStates[i] == DRAINING) {
       if (distances[i] >= tankMinimums[i]) {
+        if (currentTime > lastAlarmAcknowledgmentTime + alarmTriggerDelay) {
         alarmActiveFlags[i] = true;
         lastActiveTank = i;
+        }
       } else if (checkConsistentIdle(i)) {
         tankStates[i] = IDLE;
       }
@@ -214,7 +230,7 @@ if (tankStates[i] != previousState[i]) {
   if (digitalRead(buttonPin) == HIGH) {
     delay(debounceDelay);
     if (digitalRead(buttonPin) == HIGH) {
-
+      lastAlarmAcknowledgmentTime = millis(); // Update the acknowledgment time
       Serial.println("Button press acknowledged. Resetting alarm flags.");
       for (int i = 0; i < 3; i++) {
         acknowledgedFlags[i] = true;  // Acknowledge for all tanks
