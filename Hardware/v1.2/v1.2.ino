@@ -384,3 +384,21 @@ bool areMedianReadingsConsistent(int sensorIndex) {
     }
     return true; // All readings are consistent
 }
+
+
+
+int calculateWaterLevelPercentage(int distance, int tankIndex) {
+  // Ensure tankIndex is within the bounds of the arrays
+  if (tankIndex < 0 || tankIndex >= sizeof(tankMinimums) / sizeof(tankMinimums[0])) {
+    return -1; // Return an error value if tankIndex is out of bounds
+  }
+  
+  // Calculate the inverted distance to represent the water level
+  // This calculation assumes that a lower distance indicates a higher water level
+  int level = 100 * (tankMinimums[tankIndex] - distance) / (tankMinimums[tankIndex] - tankMaximums[tankIndex]);
+
+  // Constrain the result to ensure it is within 0 to 100%
+  int percentage = constrain(level, 0, 100);
+
+  return percentage;
+}
