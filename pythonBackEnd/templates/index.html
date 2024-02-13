@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Water Level Indicator</title>
+<style>
+  .container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .indicator {
+    text-align: center;
+    font-family: Arial, sans-serif;
+    margin: 0 30px;
+  }
+  .water-icon {
+    margin-bottom: 8px;
+  }
+  .water-tank {
+    width: 120px;
+    height: 300px;
+    border: 2px solid #000;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .water-level {
+    background-color: #0000ff;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    transition: height 0.5s ease-in-out;
+  }
+  .label {
+    margin-top: 10px;
+  }
+  .labelTank {
+    margin: 10px;
+  }
+</style>
+
+</head>
+<body>
+  <div class="container" id="tanksContainer">
+    <!-- The tank elements will be populated by JavaScript -->
+  </div>
+  
+  <script>
+  // Function to update tank levels and volumes
+  function updateTanks(tanks) {
+    const container = document.getElementById('tanksContainer');
+    container.innerHTML = ''; // Clear the container before adding updated info
+  
+    Object.keys(tanks).forEach((tank_id) => {
+      const tank_data = tanks[tank_id];
+      container.innerHTML += `
+        <div class="indicator">
+          <div class="labelTank">Tank ${tank_id.toUpperCase()}</div>
+          <div class="water-icon">💧</div>
+          <div class="water-tank">
+            <div class="water-level" style="height: ${tank_data['level']}%;"></div>
+          </div>
+          <div class="label">${tank_data['level']}%</div>
+          <div class="labelTank">${tank_data['volume']} Liters</div>
+        </div>
+      `;
+    });
+  }
+  
+  // Function to fetch data from the Flask server
+  function fetchData() {
+    fetch('/data')
+      .then(response => response.json())
+      .then(data => {
+        // Use fetched data to update tanks
+        updateTanks(data);
+      })
+      .catch(error => console.error('Error fetching data:', error));
+  }
+  
+  // Fetch data every 5 seconds
+  setInterval(fetchData, 5000);
+  
+  // Fetch data when the page loads
+  document.addEventListener('DOMContentLoaded', fetchData);
+  </script>
+  </body>
+  
+</html>
